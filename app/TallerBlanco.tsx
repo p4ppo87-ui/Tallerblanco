@@ -86,13 +86,13 @@ export default function TallerBlanco() {
   }
 
   const s: any = {
-    app: { minHeight: "100vh", background: "#0a0f1a", color: "#e2e8f0", fontFamily: "'Courier New', monospace" },
+    app: { minHeight: "100vh", width: "100%", maxWidth: "100vw", overflowX: "hidden", background: "#0a0f1a", color: "#e2e8f0", fontFamily: "'Courier New', monospace", boxSizing: "border-box" },
     header: { background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", borderBottom: "1px solid #f97316", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" },
     logo: { fontSize: 22, fontWeight: 900, letterSpacing: 3, color: "#f97316", textTransform: "uppercase" },
     sub: { fontSize: 11, color: "#64748b", letterSpacing: 2 },
     nav: { display: "flex", gap: 4, background: "#0f172a", padding: "8px 24px", borderBottom: "1px solid #1e293b", overflowX: "auto" },
     navBtn: (active: boolean) => ({ background: active ? "#f97316" : "transparent", color: active ? "#0a0f1a" : "#64748b", border: "none", padding: "8px 16px", cursor: "pointer", fontFamily: "'Courier New', monospace", fontWeight: 700, fontSize: 12, letterSpacing: 1, borderRadius: 2, whiteSpace: "nowrap" }),
-    main: { padding: 24, maxWidth: 1100, margin: "0 auto" },
+    main: { padding: "16px", maxWidth: 1100, margin: "0 auto", width: "100%", boxSizing: "border-box" },
     grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 24 },
     cardAccent: (color: string) => ({ background: "#0f172a", border: `1px solid ${color}`, borderLeft: `4px solid ${color}`, borderRadius: 4, padding: 20 }),
     kpiLabel: { fontSize: 11, color: "#64748b", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 },
