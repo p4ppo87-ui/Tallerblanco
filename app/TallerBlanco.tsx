@@ -354,7 +354,7 @@ function TabInicio({ ordenes, ordenesMes, ingresosCobradonMes, gastosMes, utilid
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#f87171" }}>{fmt(o.costo)}</div>
-                <button className="btn-sm btn-primary" style={{ marginTop: 4 }} onClick={() => marcarCobrado(o.id)}>✓ Cobrar</button>
+                <button className="btn-sm btn-primary" style={{ marginTop: 4 }} onClick={async () => { await marcarCobrado(o.id); }}>✓ Cobrar</button>
               </div>
             </div>
           ))}
@@ -1044,7 +1044,7 @@ function OrdenDetail({ orden, onClose, cambiarEstado, marcarCobrado, onDelete, o
               </select>
             </div>
             <div className="btn-row" style={{ marginTop: 16 }}>
-              {!o.cobrado && o.estado === "completado" && <button className="btn btn-primary" onClick={() => { marcarCobrado(o.id); onClose(); }}>✓ Marcar cobrado</button>}
+              {!o.cobrado && o.estado === "completado" && <button className="btn btn-primary" onClick={() => {  }}>✓ Marcar cobrado</button>}
               <button className="btn btn-ghost" onClick={onClose}>Cerrar</button>
               <button className="btn btn-danger" onClick={() => { if (confirm("¿Eliminar orden?")) onDelete(o.id); }}>Eliminar</button>
             </div>
