@@ -127,7 +127,13 @@ export default function TallerApp() {
 
   const mes = mesActual();
   const ordenesMes = ordenes.filter(o => (o.fecha || "").startsWith(mes));
-  const ingresosCobradonMes = ordenesMes.filter(o => o.estado === "completado" && o.cobrado).reduce((s, o) => s + (+o.costo || 0), 0);
+  const ingresosCobradonMes = ordenesMes
+  .filter(o => o.estado === "completado" && o.cobrado)
+  .reduce((s, o) => {
+    const items = o.items || [];
+    const costoRepuestos = items.reduce((ss, i) => ss + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0);
+    return s + (+o.costo || 0) - costoRepuestos;
+  }, 0);
   const gastosMes = gastos.filter(g => (g.fecha || "").startsWith(mes)).reduce((s, g) => s + (+g.monto || 0), 0);
   const utilidadMes = ingresosCobradonMes - gastosMes;
   const ordenesActivas = ordenes.filter(o => o.estado !== "completado").length;
