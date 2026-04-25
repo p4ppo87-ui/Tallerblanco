@@ -470,12 +470,12 @@ function TabFinanzas({ ordenes, gastos, setModal, setForm, deleteGasto }: any) {
   const [vistaComparativa, setVistaComparativa] = useState(false);
 
   function gananciaOrden(o: any) {
-    const items = o.items || [];
-    const costoRepuestos = items.reduce((s: number, i: any) => s + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0);
-    const ventaRepuestos = items.reduce((s: number, i: any) => s + (+i.precio * +i.cantidad), 0);
-    const manoObra = +o.costo_mano_obra || Math.max(0, (+o.costo || 0) - ventaRepuestos);
-    return manoObra + (ventaRepuestos - costoRepuestos);
-  }
+  const items = o.items || [];
+  const costoRepuestos = items.reduce((s: number, i: any) => s + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0);
+  const ventaRepuestos = items.reduce((s: number, i: any) => s + (+i.precio * +i.cantidad), 0);
+  const manoObra = +o.costo_mano_obra || 0;
+  return manoObra + ventaRepuestos - costoRepuestos;
+}
 
   const mesesConDatos = (() => {
     const set = new Set<string>();
@@ -486,7 +486,7 @@ function TabFinanzas({ ordenes, gastos, setModal, setForm, deleteGasto }: any) {
 
   const ordenesMesCobradas = ordenes.filter((o: any) => (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(mesFiltro));
   const ingresosDelMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (+o.costo || 0), 0);
-  const costoRepuestosMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (o.items || []).reduce((ss: number, i: any) => ss + ((+i.costoCompra || 0) * +i.cantidad), 0), 0);
+  const costoRepuestosMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (o.items || []).reduce((ss: number, i: any) => ss + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0), 0);
   const gananciaRealMes = ordenesMesCobradas.reduce((s: number, o: any) => s + gananciaOrden(o), 0);
   const gastosDelMes = gastos.filter((g: any) => (g.fecha || "").startsWith(mesFiltro)).reduce((s: number, g: any) => s + (+g.monto || 0), 0);
   const utilidadRealMes = gananciaRealMes - gastosDelMes;
