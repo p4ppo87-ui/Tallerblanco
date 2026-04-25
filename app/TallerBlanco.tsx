@@ -484,22 +484,23 @@ function TabFinanzas({ ordenes, gastos, setModal, setForm, deleteGasto }: any) {
 }
 
   const mesesConDatos = (() => {
-    const set = new Set<string>();
-    ordenes.forEach((o: any) => { if (o.fecha) set.add(o.fecha.slice(0, 7)); });
-    gastos.forEach((g: any) => { if (g.fecha) set.add(g.fecha.slice(0, 7)); });
-    return Array.from(set).sort((a, b) => b.localeCompare(a));
-  })();
+    const ordenesMesCobradas = ordenes.filter((o: any) => (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(mesFiltro));
+const ingresosDelMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (+o.costo || 0), 0);
+const costoRepuestosMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (o.items || []).reduce((ss: number, i: any) => ss + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0), 0);
+const gananciaRealMes = ordenesMesCobradas.reduce((s: number, o: any) => s + gananciaOrden(o), 0);
+const gastosDelMes = gastos.filter((g: any) => (g.fecha || "").startsWith(mesFiltro)).reduce((s: number, g: any) => s + (+g.monto || 0), 0);
+const utilidadRealMes = gananciaRealMes - gastosDelMes;
+const gastosMesArr = gastos.filter((g: any) => (g.fecha || "").startsWith(mesFiltro));
+const gastosCat: Record<string, number> = {};
+gastosMesArr.forEach((g: any) => { gastosCat[g.categoria || "otro"] = (gastosCat[g.categoria || "otro"] || 0) + g.monto; });
 
-  const ordenesMesCobradas = ordenes.filter((o: any) => (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(mesFiltro));
-  const ingresosDelMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (+o.costo || 0), 0);
-  const costoRepuestosMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (o.items || []).reduce((ss: number, i: any) => ss + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0), 0);
-  const gananciaRealMes = ordenesMesCobradas.reduce((s: number, o: any) => s + gananciaOrden(o), 0);
-  const gastosDelMes = gastos.filter((g: any) => (g.fecha || "").startsWith(mesFiltro)).reduce((s: number, g: any) => s + (+g.monto || 0), 0);
-  const utilidadRealMes = gananciaRealMes - gastosDelMes;
-  const gastosMesArr = gastos.filter((g: any) => (g.fecha || "").startsWith(mesFiltro));
-  const gastosCat: Record<string, number> = {};
-  gastosMesArr.forEach((g: any) => { gastosCat[g.categoria || "otro"] = (gastosCat[g.categoria || "otro"] || 0) + g.monto; });
-
+const ultimos6 = mesesConDatos.slice(0, 6).map(m => {
+  const ords = ordenes.filter((o: any) => (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(m));
+  const ing = ords.reduce((s: number, o: any) => s + (+o.costo || 0), 0);
+  const gan = ords.reduce((s: number, o: any) => s + gananciaOrden(o), 0);
+  const gas = gastos.filter((g: any) => (g.fecha || "").startsWith(m)).reduce((s: number, g: any) => s + (+g.monto || 0), 0);
+  return { mes: m, ingresos: ing, gastos: gas, gananciaReal: gan - gas };
+});
   const ultimos6 = mesesConDatos.slice(0, 6).map(m => {
     const ords = ordenes.filter((o: any) => (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(m));
     const ing = ords.reduce((s: number, o: any) => s + (+o.costo || 0), 0);
