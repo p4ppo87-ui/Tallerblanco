@@ -471,7 +471,7 @@ function TabFinanzas({ ordenes, gastos, setModal, setForm, deleteGasto }: any) {
 
   function gananciaOrden(o: any) {
     const items = o.items || [];
-    const costoRepuestos = items.reduce((s: number, i: any) => s + ((+i.costoCompra || 0) * +i.cantidad), 0);
+    const costoRepuestos = items.reduce((s: number, i: any) => s + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0);
     const ventaRepuestos = items.reduce((s: number, i: any) => s + (+i.precio * +i.cantidad), 0);
     const manoObra = +o.costo_mano_obra || Math.max(0, (+o.costo || 0) - ventaRepuestos);
     return manoObra + (ventaRepuestos - costoRepuestos);
