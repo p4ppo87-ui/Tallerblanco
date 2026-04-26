@@ -131,9 +131,7 @@ export default function TallerApp() {
   .filter(o => o.estado === "completado" && o.cobrado)
   .reduce((s, o) => {
     const items = o.items || [];
-    const costoRepuestos = items.reduce((ss, i) => ss + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0);
-    return s + (+o.costo || 0) - costoRepuestos;
-  }, 0);
+    const costoRepuestos = items.reduce((s: number, i: any) => s + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0);
   const gastosMes = gastos.filter(g => (g.fecha || "").startsWith(mes)).reduce((s, g) => s + (+g.monto || 0), 0);
   const utilidadMes = ingresosCobradonMes - gastosMes;
   const ordenesActivas = ordenes.filter(o => o.estado !== "completado").length;
@@ -475,24 +473,22 @@ function TabFinanzas({ ordenes, gastos, setModal, setForm, deleteGasto }: any) {
   const [mesFiltro, setMesFiltro] = useState(mesActual());
   const [vistaComparativa, setVistaComparativa] = useState(false);
 
-  function gananciaOrden(o: any) {
-  const items = o.items || [];
-  const costoRepuestos = items.reduce((s: number, i: any) => s + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0);
-  const ventaRepuestos = items.reduce((s: number, i: any) => s + (+i.precio * +i.cantidad), 0);
-  const manoObra = +o.costo_mano_obra || 0;
-  return manoObra + ventaRepuestos - costoRepuestos;
-}
+const mesesConDatos = (() => {
+    const set = new Set<string>();
+    ordenes.forEach((o: any) => { if (o.fecha) set.add(o.fecha.slice(0, 7)); });
+    gastos.forEach((g: any) => { if (g.fecha) set.add(g.fecha.slice(0, 7)); });
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
+  })();
 
-  const mesesConDatos = (() => {
-    const ordenesMesCobradas = ordenes.filter((o: any) => (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(mesFiltro));
-const ingresosDelMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (+o.costo || 0), 0);
-const costoRepuestosMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (o.items || []).reduce((ss: number, i: any) => ss + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0), 0);
-const gananciaRealMes = ordenesMesCobradas.reduce((s: number, o: any) => s + gananciaOrden(o), 0);
-const gastosDelMes = gastos.filter((g: any) => (g.fecha || "").startsWith(mesFiltro)).reduce((s: number, g: any) => s + (+g.monto || 0), 0);
-const utilidadRealMes = gananciaRealMes - gastosDelMes;
-const gastosMesArr = gastos.filter((g: any) => (g.fecha || "").startsWith(mesFiltro));
-const gastosCat: Record<string, number> = {};
-gastosMesArr.forEach((g: any) => { gastosCat[g.categoria || "otro"] = (gastosCat[g.categoria || "otro"] || 0) + g.monto; });
+  const ordenesMesCobradas = ordenes.filter((o: any) => (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(mesFiltro));
+  const ingresosDelMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (+o.costo || 0), 0);
+  const costoRepuestosMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (o.items || []).reduce((ss: number, i: any) => ss + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0), 0);
+  const gananciaRealMes = ordenesMesCobradas.reduce((s: number, o: any) => s + gananciaOrden(o), 0);
+  const gastosDelMes = gastos.filter((g: any) => (g.fecha || "").startsWith(mesFiltro)).reduce((s: number, g: any) => s + (+g.monto || 0), 0);
+  const utilidadRealMes = gananciaRealMes - gastosDelMes;
+  const gastosMesArr = gastos.filter((g: any) => (g.fecha || "").startsWith(mesFiltro));
+  const gastosCat: Record<string, number> = {};
+  gastosMesArr.forEach((g: any) => { gastosCat[g.categoria || "otro"] = (gastosCat[g.categoria || "otro"] || 0) + g.monto; });
 
 const ultimos6 = mesesConDatos.slice(0, 6).map(m => {
   const ords = ordenes.filter((o: any) => (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(m));
