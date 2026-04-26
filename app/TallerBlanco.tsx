@@ -469,20 +469,32 @@ function TabOrdenes({ ordenes, search, setSearch, ordenesView, setOrdenesView, s
   );
 }
 
-function TabFinanzas({ ordenes, gastos, setModal, setForm, deleteGasto }: any) {
+ffunction TabFinanzas({ ordenes, gastos, setModal, setForm, deleteGasto }: any) {
   const [mesFiltro, setMesFiltro] = useState(mesActual());
   const [vistaComparativa, setVistaComparativa] = useState(false);
 
-const mesesConDatos = (() => {
+  function gananciaOrden(o: any) {
+    const items = o.items || [];
+    const costoRepuestos = items.reduce((s: number, i: any) => s + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0);
+    const ventaRepuestos = items.reduce((s: number, i: any) => s + (+i.precio * +i.cantidad), 0);
+    const manoObra = +o.costo_mano_obra || Math.max(0, (+o.costo || 0) - ventaRepuestos);
+    return manoObra + (ventaRepuestos - costoRepuestos);
+  }
+
+  const mesesConDatos = (() => {
     const set = new Set<string>();
     ordenes.forEach((o: any) => { if (o.fecha) set.add(o.fecha.slice(0, 7)); });
     gastos.forEach((g: any) => { if (g.fecha) set.add(g.fecha.slice(0, 7)); });
     return Array.from(set).sort((a, b) => b.localeCompare(a));
   })();
 
-  const ordenesMesCobradas = ordenes.filter((o: any) => (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(mesFiltro));
+  const ordenesMesCobradas = ordenes.filter((o: any) =>
+    (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(mesFiltro)
+  );
   const ingresosDelMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (+o.costo || 0), 0);
-  const costoRepuestosMes = ordenesMesCobradas.reduce((s: number, o: any) => s + (o.items || []).reduce((ss: number, i: any) => ss + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0), 0);
+  const costoRepuestosMes = ordenesMesCobradas.reduce((s: number, o: any) =>
+    s + (o.items || []).reduce((ss: number, i: any) => ss + ((+i.costo_compra || +i.costoCompra || 0) * +i.cantidad), 0), 0
+  );
   const gananciaRealMes = ordenesMesCobradas.reduce((s: number, o: any) => s + gananciaOrden(o), 0);
   const gastosDelMes = gastos.filter((g: any) => (g.fecha || "").startsWith(mesFiltro)).reduce((s: number, g: any) => s + (+g.monto || 0), 0);
   const utilidadRealMes = gananciaRealMes - gastosDelMes;
@@ -490,13 +502,6 @@ const mesesConDatos = (() => {
   const gastosCat: Record<string, number> = {};
   gastosMesArr.forEach((g: any) => { gastosCat[g.categoria || "otro"] = (gastosCat[g.categoria || "otro"] || 0) + g.monto; });
 
-const ultimos6 = mesesConDatos.slice(0, 6).map(m => {
-  const ords = ordenes.filter((o: any) => (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(m));
-  const ing = ords.reduce((s: number, o: any) => s + (+o.costo || 0), 0);
-  const gan = ords.reduce((s: number, o: any) => s + gananciaOrden(o), 0);
-  const gas = gastos.filter((g: any) => (g.fecha || "").startsWith(m)).reduce((s: number, g: any) => s + (+g.monto || 0), 0);
-  return { mes: m, ingresos: ing, gastos: gas, gananciaReal: gan - gas };
-});
   const ultimos6 = mesesConDatos.slice(0, 6).map(m => {
     const ords = ordenes.filter((o: any) => (o.cobrado || o.estado === "completado") && (o.fecha || "").startsWith(m));
     const ing = ords.reduce((s: number, o: any) => s + (+o.costo || 0), 0);
@@ -551,17 +556,43 @@ const ultimos6 = mesesConDatos.slice(0, 6).map(m => {
               }
             </select>
           </div>
+
           <div className="kpi-grid">
-            <div className="kpi-card" style={{ borderLeft: "3px solid #4ade80" }}><div className="kpi-label">Facturado</div><div className="kpi-val" style={{ color: "#4ade80", fontSize: 18 }}>{fmt(ingresosDelMes)}</div></div>
-            <div className="kpi-card" style={{ borderLeft: "3px solid #f87171" }}><div className="kpi-label">Gastos</div><div className="kpi-val" style={{ color: "#f87171", fontSize: 18 }}>{fmt(gastosDelMes)}</div></div>
-            {costoRepuestosMes > 0 && <div className="kpi-card" style={{ borderLeft: "3px solid #f87171" }}><div className="kpi-label">Costo repuestos</div><div className="kpi-val" style={{ color: "#f87171", fontSize: 18 }}>− {fmt(costoRepuestosMes)}</div></div>}
-            <div className="kpi-card" style={{ borderLeft: `3px solid ${utilidadRealMes >= 0 ? "#fb923c" : "#f87171"}` }}><div className="kpi-label">Ganancia real</div><div className="kpi-val" style={{ color: utilidadRealMes >= 0 ? "#fb923c" : "#f87171", fontSize: 18 }}>{fmt(utilidadRealMes)}</div></div>
+            <div className="kpi-card" style={{ borderLeft: "3px solid #4ade80" }}>
+              <div className="kpi-label">Facturado</div>
+              <div className="kpi-val" style={{ color: "#4ade80", fontSize: 18 }}>{fmt(ingresosDelMes)}</div>
+            </div>
+            <div className="kpi-card" style={{ borderLeft: "3px solid #f87171" }}>
+              <div className="kpi-label">Gastos</div>
+              <div className="kpi-val" style={{ color: "#f87171", fontSize: 18 }}>{fmt(gastosDelMes)}</div>
+            </div>
+            {costoRepuestosMes > 0 && (
+              <div className="kpi-card" style={{ borderLeft: "3px solid #f87171" }}>
+                <div className="kpi-label">Costo repuestos</div>
+                <div className="kpi-val" style={{ color: "#f87171", fontSize: 18 }}>− {fmt(costoRepuestosMes)}</div>
+              </div>
+            )}
+            <div className="kpi-card" style={{ borderLeft: `3px solid ${utilidadRealMes >= 0 ? "#fb923c" : "#f87171"}` }}>
+              <div className="kpi-label">Ganancia real</div>
+              <div className="kpi-val" style={{ color: utilidadRealMes >= 0 ? "#fb923c" : "#f87171", fontSize: 18 }}>{fmt(utilidadRealMes)}</div>
+            </div>
           </div>
+
+          {costoRepuestosMes > 0 && (
+            <div className="kpi-card" style={{ gridColumn: "span 2", background: "#0a1628", border: "1px solid #1e3a5f", marginBottom: 12 }}>
+              <div className="kpi-label" style={{ color: "#60a5fa" }}>Cómo se calcula</div>
+              <div style={{ fontSize: 11, color: "#64748b", marginTop: 4, lineHeight: 1.6 }}>
+                Facturado {fmt(ingresosDelMes)} − Repuestos {fmt(costoRepuestosMes)} − Gastos {fmt(gastosDelMes)} = <span style={{ color: "#fb923c", fontWeight: 700 }}>{fmt(utilidadRealMes)}</span>
+              </div>
+            </div>
+          )}
+
           <div className="card">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div className="section-title" style={{ marginBottom: 0 }}>Gastos por categoría</div>
               {mesFiltro === mesActual() && <button className="btn-sm btn-primary" onClick={() => { setForm({ fecha: today() }); setModal("gasto"); }}>+ Gasto</button>}
             </div>
+            {Object.keys(gastosCat).length === 0 && <div style={{ fontSize: 12, color: "#64748b" }}>Sin gastos este mes</div>}
             {Object.entries(gastosCat).map(([cat, total]: any) => {
               const pct = gastosDelMes > 0 ? Math.round((total / gastosDelMes) * 100) : 0;
               return (
@@ -575,6 +606,7 @@ const ultimos6 = mesesConDatos.slice(0, 6).map(m => {
               );
             })}
           </div>
+
           <div className="card">
             <div className="section-title">Detalle gastos</div>
             {gastosMesArr.length === 0 && <div style={{ fontSize: 12, color: "#64748b" }}>Sin gastos este mes</div>}
@@ -595,7 +627,6 @@ const ultimos6 = mesesConDatos.slice(0, 6).map(m => {
     </div>
   );
 }
-
 function TabClientes({ clientes, ordenes, setModal, setForm, deleteCliente }: any) {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
